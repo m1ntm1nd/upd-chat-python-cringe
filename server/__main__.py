@@ -35,7 +35,6 @@ try:
             recvPackets.put((data,addr))
 
     def RunServer(port):
-        print("HEEEEY")
         logger=logging.getLogger('main')   #логирование
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'
@@ -49,14 +48,17 @@ try:
         logger.addHandler(handler)
 
         host = socket.gethostbyname(socket.gethostname())
+
+        print('='*53)
+        print('*'*18+'Server Running'+'*'*21)
+        print('='*53)
         logger.info(f'Server hosting on IP -> '+str(host)+' Port -> '+str(port))
-        print('Server hosting on IP -> '+str(host)+' Port -> '+str(port))
+        print('Server hosting on IP -> ['+str(host)+'] Port -> ['+str(port)+']')
+        print('='*53)
         s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         s.bind((host,port))
         clients = set()
         recvPackets = queue.Queue()
-
-        print('Server Running...')
 
         threading.Thread(target=RecvData,args=(s,recvPackets)).start()
 
