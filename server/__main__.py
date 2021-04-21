@@ -35,6 +35,7 @@ try:
             recvPackets.put((data,addr))
 
     def RunServer(port):
+        print("HEEEEY")
         logger=logging.getLogger('main')   #логирование
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'
