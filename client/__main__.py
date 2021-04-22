@@ -8,65 +8,60 @@ import time
 
 
 from settings import ENCODING,BUFFERSIZE
-# from actions import Slash as sl
+
+def ReceiveData(sock,encoding,BufferSize):
+    while True:
+        try:
+            data,addr = sock.recvfrom(BufferSize)
+            data=data.decode(encoding)
+            itsatime = time.strftime("%Y-%m-%d-%H.%M.%S", time.localtime())
+            print('['+str(addr[0])+']'+'='+'['+str(addr[1])+']'+'='+'['+itsatime+']'+'/'+data)
+            # data,addr = sock.recvfrom(1024)
+            # print(data.decode('utf-8'))
+        except:
+            pass
 
 
-# logger=logging.getLogger('main')
+class Client:
+    def __init__(self):
+        self.name = None
+        self.port = random.randint(6000, 8000)
+        self.serverIP = '127.0.1.1'
 
-# formatter = logging.Formatter(
-#     '%(asctime)s - %(levelname)s - %()s'
-# )
+    def Rename(self):
+        print('*'*53)
+        name=input("Enter new name: ")
+        print('*'*53)
+        self.name = name     
+        return self.name
 
-# handler=logging.FileHandler('info.log',encoding=ENCODING)
-# handler.setFormatter(formatter) 
-# handler.setLevel(logging.DEBUG)
-
-# logger.setLevel(logging.DEBUG)
-# logger.addHandler(handler)
-
-
-try:
-    def ReceiveData(sock,encoding,BufferSize):
-        while True:
-            try:
-                data,addr = sock.recvfrom(BufferSize)
-                data=data.decode(encoding)
-                itsatime = time.strftime("%Y-%m-%d-%H.%M.%S", time.localtime())
-                print('['+str(addr[0])+']'+'='+'['+str(addr[1])+']'+'='+'['+itsatime+']'+'/'+data)
-                # data,addr = sock.recvfrom(1024)
-                # print(data.decode('utf-8'))
-            except:
-                pass
-
-    def connect(serverIP,port):
+    def Connect(self):
         print('*'*53)
         serverIP=input('Enter new serverIP: ')
         port=int(input('Enter new port: '))
         print('*'*53)
-        RunClient(serverIP,port)
+        self.port = port
+        self.serverIP = serverIP
+        self.RunClient()
 
-    def rename(name):
-        print('*'*53)
-        name=input("Enter new name: ")
-        print('*'*53)
-        return name            
-
-    def RunClient(serverIP,port):
+    def RunClient(self, serverIP, port):
+        if port != None:
+            self.port = port
+        if serverIP != None:
+            self.serverIP = serverIP
+        
         BufferSize=BUFFERSIZE
         encoding=ENCODING
         host = socket.gethostbyname(socket.gethostname())
-        # if not port:
-        #     port = random.randint(6000,10000)
-        # logger.info('Client IP->'+str(host)+' Port->'+str(port))
 
         print('='*53)
         print('*'*18+'Client Running'+'*'*21)
         print('='*53)
-        print('Client IP -> ['+str(host)+'] Port -> ['+str(port)+']')
+        print('Client IP -> ['+str(host)+'] Port -> ['+str(self.port)+']')
         print('='*53)
-        server = (str(serverIP),8000)
+        server = (str(self.serverIP),8000)
         s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        s.bind((host,port))
+        s.bind((host,self.port))
         s.setblocking(0)
 
         join=False
@@ -95,13 +90,13 @@ try:
                 continue
             elif data=='/rename':
                 old_name=name
-                name=rename(name)
+                name=self.Rename(name)
                 data= '['+old_name+']' + ': change name'+' on ' + '['+name+']'
                 s.sendto(data.encode(encoding),server)
             elif data=='/connect':
                 data='['+name+']' + ' <- ' + 'left the chat' 
                 s.sendto(data.encode(encoding),server)
-                connect(serverIP,port)
+                self.Connect(self.serverIP,self.port)
             elif data[0]=='/': 
                 pass
             else:
@@ -111,11 +106,15 @@ try:
         s.sendto(data.encode(encoding),server)
         s.close()
         os._exit(1)
-except:
-    # logger.info('Client closed')
-    print('Client closed')
-    
-# if len(sys.argv)==2:
-RunClient(sys.argv[1],int(sys.argv[2]))
-# else:
-#   RunClient(sys.argv[1])
+
+
+        
+def main():
+    client = Client()
+    try:
+        client.RunClient(sys.argv[1],int(sys.argv[2]))
+    except:
+        pass
+
+if __name__ == "__main__":
+    main()
