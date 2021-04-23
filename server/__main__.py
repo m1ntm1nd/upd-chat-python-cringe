@@ -4,24 +4,28 @@ import queue
 import sys
 import random
 import os
-import logging
+import logging as log
 import time
 import csv
 
+import settings
 
-from settings import PORT,BUFFERSIZE,ENCODING
 
-
-BufferSize=BUFFERSIZE
-encoding=ENCODING
-port=PORT
 
 class Server():
-    def __init__(self, logger, host, socket):
-        self.port = port
-        self.log = logger
-        self.host = host
-        self.socket = socket
+    def __init__(self):             #creating server w/ defaults 
+        self.port = settings.PORT
+        self.host = socket.gethostbyname(socket.gethostname())
+        self.socket = self.create_server()
+
+    def create_server(self):
+        s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        s.bind((self.host,self.port))
+
+        Server.print_info('*'*18+'Server Running'+'*'*21)   
+        Server.print_info('Server hosting on IP -> ['+str(self.host)+'] Port -> ['+str(self.port)+']')
+
+        return s
 
     def RunServer(self):         
         clients = set()
@@ -39,7 +43,7 @@ class Server():
                     continue
                 clients.add(addr)
                 itsatime = time.strftime("%Y-%m-%d-%H.%M.%S", time.localtime())
-                data = data.decode(encoding) 
+                data = data.decode(settings.ENCODING) 
                 data=exchange(data)  #вызов фильтра 
                 if data.endswith('exit'):
                     clients.remove(addr)
@@ -47,34 +51,15 @@ class Server():
                 print('['+str(addr[0])+']'+'='+'['+str(addr[1])+']'+'='+'['+itsatime+']'+'/'+data)
                 for c in clients:  #клиент не получает свои сообщения
                     if c!=addr:
-                        self.socket.sendto(data.encode(encoding),c)
+                        self.socket.sendto(data.encode(settings.ENCODING),c)
+
+    def print_info(string):
+        delim = '='*53
+        print(delim)
+        print(string)
+        print(delim)
 
 
-def create_logger():
-    logger=logging.getLogger('main')   #логирование
-    formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s'
-    )
-    handler=logging.FileHandler('info.log',encoding=ENCODING)
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(formatter)    
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-
-    return logger
-
-def create_server(logger):
-    host = socket.gethostbyname(socket.gethostname())
-
-    print('='*53)
-    print('*'*18+'Server Running'+'*'*21)
-    print('='*53)
-
-    print('Server hosting on IP -> ['+str(host)+'] Port -> ['+str(port)+']')    
-    print('='*53)
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.bind((host,port))
-    return (host, s)
 
 def exchange(data):   #фильтр слов 
     data=data.replace('cringe','maybe cring')
@@ -88,14 +73,18 @@ def RecvData(sock,recvPackets):
 
 
 def main():
-    logger = create_logger()
-    srv = create_server(logger)
-    server = Server(logger, srv[0], srv[1])
+    log.basicConfig(
+        format='[ %(levelname)s ] %(message)s',
+        level=log.INFO,
+        filename='info.log'
+    )
+
+    server = Server()
     try:
         server.RunServer()
     except:
-    # logger.info('Server closed')
         print('Server closed')
+
 
 if __name__ == "__main__":
     main()
